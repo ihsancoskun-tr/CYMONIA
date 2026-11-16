@@ -4,7 +4,7 @@ This Worker is isolated from CYMONIA's production world. It imports the existing
 
 ## Runtime state
 
-- Preserves the last confirmed N-007 migration index: year 30, estimated population 383 (±15), and confirmed social/cultural observations.
+- Preserves the last confirmed N-007 migration index: year 30, estimated population approximately 383, and confirmed social/cultural observations.
 - Exposes read-only `/health`, `/state` and `/history` endpoints.
 - Stores imported snapshots as versioned chunks so a single Durable Object value does not need to contain the whole world.
 - Advances the imported world through the existing `advanceWorldTo` engine function, one bounded alarm cycle at a time.
