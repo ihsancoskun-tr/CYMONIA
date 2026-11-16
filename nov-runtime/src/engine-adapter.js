@@ -1,4 +1,4 @@
-import { advanceWorldTo, WORLD_MINUTES_PER_YEAR } from "../../world/index.js";
+import { advanceWorldTo, WORLD_MINUTES_PER_YEAR, REAL_MS_PER_WORLD_MINUTE } from "../../world/index.js";
 
 const WORLD_ARRAYS = [
   "citizens", "objects", "resourceDeposits", "actions", "projects", "designs",
@@ -64,10 +64,12 @@ export function validateEngineWorld(world, expectedPopulation = null) {
 export function advanceN007World(world, nowMs = Date.now()) {
   const validation = validateEngineWorld(world);
   if (!validation.ok) throw new Error(validation.reason);
+  const targetWorldMinute = Math.floor(Math.max(0, nowMs - world.clock.realEpochMs) / REAL_MS_PER_WORLD_MINUTE);
   advanceWorldTo(world, nowMs, { maxSegments: 64 });
   return {
     worldMinute: world.clock.worldMinute,
     worldYear: Math.floor(world.clock.worldMinute / WORLD_MINUTES_PER_YEAR) + 1,
-    livingPopulation: world.citizens.filter(citizen => citizen.alive).length
+    livingPopulation: world.citizens.filter(citizen => citizen.alive).length,
+    catchingUp: world.clock.worldMinute < targetWorldMinute
   };
 }
