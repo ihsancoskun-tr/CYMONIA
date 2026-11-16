@@ -1,0 +1,12 @@
+name = "nov-sovereign-world"
+main = "nov-runtime/src/index.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+[[durable_objects.bindings]]
+name = "NOV_WORLD"
+class_name = "NovWorld"
+
+[[migrations]]
+tag = "n007-sqlite-v1"
+new_sqlite_classes = ["NovWorld"]
