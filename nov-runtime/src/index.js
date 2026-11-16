@@ -12,7 +12,8 @@ export const N007_MIGRATION_RECORD = Object.freeze({
     birthsRecordedForYears25To30: 70,
     deathsRecordedForYears25To30: 67,
     ageDistributionPercent: { "0-14": 33, "15-49": 51, "50+": 16 },
-    localClusters: 6
+    localClusters: null,
+    localClusterCountNote: "Earlier six-community wording remains ambiguous; do not interpret as confirmed lineage or ideological groups."
   },
   confirmedState: {
     subsistence: "hunter_fisher_gatherer",
