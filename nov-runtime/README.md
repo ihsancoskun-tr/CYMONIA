@@ -1,6 +1,6 @@
 # NOV / N-007 isolated runtime
 
-This Worker is deliberately separate from CYMONIA's production world. It uses its own Worker name, Durable Object namespace and SQLite-backed Durable Object storage.
+This is a migration shell, not yet the full civilization engine. It is deliberately separate from CYMONIA's production world. It uses its own Worker name, Durable Object namespace and SQLite-backed Durable Object storage. No citizen cognition, world clock, autonomous tick or ecological engine is connected yet.
 
 ## Current behavior
 
