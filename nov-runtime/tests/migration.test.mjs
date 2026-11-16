@@ -1,8 +1,64 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createMigrationRecord, validateLegacySnapshot } from "../src/index.js";
+import { validateEngineWorld } from "../src/engine-adapter.js";
 
-test("migration record preserves confirmed N-007 baseline without starting time", () => {
+function engineWorld(overrides = {}) {
+  const citizen = {
+    id: "n-001",
+    alive: true,
+    body: { ageMinutes: 30 * 525600 },
+    genome: {},
+    psychology: {},
+    position: { x: 1, y: 1 },
+    language: {},
+    skills: {},
+    relationships: {},
+    cognition: {},
+    knowledge: [],
+    memories: [],
+    knownEntityIds: ["n-001"],
+    beliefs: [],
+    possessions: [],
+    goals: [],
+    plans: [],
+    commitments: [],
+    programs: []
+  };
+  const arrays = [
+    "citizens", "objects", "resourceDeposits", "actions", "projects", "designs",
+    "buildings", "organizations", "claims", "commitments", "grievances",
+    "currencySystems", "relationships", "languages", "experiments",
+    "cognitionQueue", "ledger"
+  ];
+  const world = {
+    version: 2,
+    worldId: "n007-test",
+    seed: 7,
+    clock: { realEpochMs: 1, worldMinute: 29 * 525600 },
+    environment: {},
+    reserves: {},
+    privateHumanIntents: {},
+    observer: {},
+    livingWorld: {},
+    ledgerHead: "GENESIS",
+    ...Object.fromEntries(arrays.map(key => [key, key === "citizens" ? [citizen] : []])),
+    ...overrides
+  };
+  return world;
+}
+
+function snapshot(world = engineWorld()) {
+  return {
+    schemaVersion: 1,
+    simulationId: "N-007",
+    worldYear: 30,
+    population: { count: world.citizens.length },
+    worldState: world
+  };
+}
+
+test("migration record preserves the known N-007 baseline and remains paused", () => {
   const record = createMigrationRecord();
   assert.equal(record.simulationId, "N-007");
   assert.equal(record.worldYear, 30);
@@ -16,55 +72,44 @@ test("migration record preserves confirmed N-007 baseline without starting time"
 test("migration record is isolated from accidental mutation", () => {
   const a = createMigrationRecord();
   a.population.estimate = 1;
-  const b = createMigrationRecord();
-  assert.equal(b.population.estimate, 383);
+  assert.equal(createMigrationRecord().population.estimate, 383);
 });
 
 test("rejects snapshots that would reset or misidentify N-007", () => {
   assert.equal(validateLegacySnapshot({}).reason, "unsupported_schema_version");
   assert.equal(validateLegacySnapshot({
-    schemaVersion: 1, simulationId: "CYMONIA", worldYear: 30
+    schemaVersion: 1, simulationId: "CYMONIA", worldYear: 30,
+    population: { count: 1 }, worldState: engineWorld()
   }).reason, "simulation_id_mismatch");
-  assert.equal(validateLegacySnapshot({
-    schemaVersion: 1, simulationId: "N-007", worldYear: 29
-  }).reason, "world_year_must_preserve_year_30_or_later");
+  const tooYoung = snapshot(engineWorld({ clock: { realEpochMs: 1, worldMinute: 28 * 525600 } }));
+  assert.equal(validateLegacySnapshot(tooYoung).reason, "snapshot_does_not_reach_n007_year_30");
 });
 
-test("requires complete individual records and matching population count", () => {
-  const incomplete = {
-    schemaVersion: 1,
-    simulationId: "N-007",
-    worldYear: 30,
-    population: { count: 383 },
-    citizens: [],
-    worldState: {},
-    history: []
-  };
+test("requires a complete engine world and individual citizen records", () => {
+  assert.equal(validateLegacySnapshot(snapshot({})).reason, "unsupported_engine_world_version");
+  const incomplete = snapshot(engineWorld({ citizens: [] }));
   assert.equal(validateLegacySnapshot(incomplete).reason, "individual_citizen_records_required");
 });
 
-test("accepts a structurally complete snapshot without starting it", () => {
-  const snapshot = {
-    schemaVersion: 1,
-    simulationId: "N-007",
-    worldYear: 30,
-    population: { count: 2 },
-    citizens: [{ id: "n-001" }, { id: "n-002" }],
-    worldState: {},
-    history: []
-  };
-  assert.deepEqual(validateLegacySnapshot(snapshot), { ok: true });
+test("accepts a structurally complete N-007 engine snapshot", () => {
+  assert.deepEqual(validateLegacySnapshot(snapshot()), {
+    ok: true, population: 1, worldMinute: 29 * 525600
+  });
 });
 
-test("rejects duplicate citizen identifiers", () => {
-  const snapshot = {
-    schemaVersion: 1,
-    simulationId: "N-007",
-    worldYear: 30,
-    population: { count: 2 },
-    citizens: [{ id: "n-001" }, { id: "n-001" }],
-    worldState: {},
-    history: []
-  };
-  assert.equal(validateLegacySnapshot(snapshot).reason, "duplicate_citizen_id");
+test("rejects population mismatch and duplicate citizen identifiers", () => {
+  const mismatch = snapshot();
+  mismatch.population.count = 2;
+  assert.equal(validateLegacySnapshot(mismatch).reason, "population_count_must_match_engine_citizens");
+
+  const duplicateWorld = engineWorld();
+  duplicateWorld.citizens.push(structuredClone(duplicateWorld.citizens[0]));
+  const duplicate = snapshot(duplicateWorld);
+  assert.equal(validateLegacySnapshot(duplicate).reason, "duplicate_citizen_id");
+});
+
+test("rejects citizen records that do not contain engine state", () => {
+  const invalidWorld = engineWorld();
+  invalidWorld.citizens[0].body = null;
+  assert.match(validateEngineWorld(invalidWorld).reason, /citizen_engine_state_incomplete/);
 });
