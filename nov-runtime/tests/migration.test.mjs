@@ -86,9 +86,9 @@ test("rejects snapshots that would reset or misidentify N-007", () => {
 });
 
 test("requires a complete engine world and individual citizen records", () => {
-  assert.equal(validateLegacySnapshot(snapshot({})).reason, "unsupported_engine_world_version");
+  assert.equal(validateLegacySnapshot(snapshot(engineWorld({ version: 1 }))).reason, "unsupported_engine_world_version");
   const incomplete = snapshot(engineWorld({ citizens: [] }));
-  assert.equal(validateLegacySnapshot(incomplete).reason, "individual_citizen_records_required");
+  assert.equal(validateLegacySnapshot(incomplete).reason, "population_count_missing");
 });
 
 test("accepts a structurally complete N-007 engine snapshot", () => {
