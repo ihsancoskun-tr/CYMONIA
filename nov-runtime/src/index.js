@@ -231,7 +231,7 @@ export class NovWorld {
       record.startedAt = new Date().toISOString();
       record.source = { ...record.source, clockAnchoredAt: record.startedAt };
       await this.ctx.storage.put(RECORD_KEY, record);
-      await this.ctx.storage.setAlarm(Date.now() + ALARM_INTERVAL_MS);
+      await this.ctx.storage.setAlarm(Date.now() + (result.catchingUp ? 1_000 : ALARM_INTERVAL_MS));
       return json({ ok: true, status: "running", worldMinute: validation.worldMinute, simulationAdvancing: true });
     }
 
