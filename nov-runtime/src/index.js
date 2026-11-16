@@ -13,26 +13,30 @@ export const N007_MIGRATION_RECORD = Object.freeze({
   worldYear: 30,
   population: {
     estimate: 383,
-    uncertainty: 15,
-    birthsRecordedForYears25To30: 70,
-    deathsRecordedForYears25To30: 67,
-    ageDistributionPercent: { "0-14": 33, "15-49": 51, "50+": 16 },
+    precision: "approximate",
     localClusters: null,
     localClusterCountNote: "Earlier six-community wording remains ambiguous; do not interpret as confirmed lineage or ideological groups."
   },
   confirmedState: {
-    subsistence: "hunter_fisher_gatherer",
-    health: "local_infections_observed_no_epidemic_recorded",
-    language: "independent_oral_language_no_writing_evidence",
-    authority: "local_experience_and_mediation_no_central_authority",
-    knowledgeTransmission: ["memory", "observation", "imitation", "oral_transmission"],
-    customs: ["repeated_mourning_and_burial_behaviors"],
-    beliefState: "divergent_interpretations_of_dreams_and_the_dead_no_shared_religious_system"
+    socialConflict: "observed",
+    writing: "no confirmed writing system; the healer's death caused panic and was treated as evidence that writing may not yet exist",
+    language: "under observation; a complete language record is unavailable",
+    clothing: "under observation; no canonical clothing inventory is available",
+    spirituality: "not yet a focus of the simulation; no shared religious system is confirmed"
   },
   confirmedEvents: [
-    { period: "years 25-30", event: "A healer died; treatment knowledge fragmented and people began comparing accounts from multiple practitioners." },
-    { period: "years 25-30", event: "A fishing dispute was resolved through a temporary rotation arrangement." },
-    { period: "years 25-30", event: "Practical expertise and mediation gained local status without forming a coercive office." }
+    { period: "by year 30; exact date unavailable", event: "A healer died; the resulting panic raised questions about how medical knowledge was preserved and whether writing existed." },
+    { period: "by year 30; exact date unavailable", event: "Social conflict was observed, but the full chronology and participants are not preserved in the available migration record." }
+  ],
+  unknownsThatMustNotBeInvented: [
+    "individual citizen identities and personal histories",
+    "exact population count and individual ages",
+    "exact locations and membership of the six local clusters",
+    "kinship and relationship graph",
+    "individual memories, beliefs, knowledge and language lexicons",
+    "subsistence balance, health records and full environmental/resource map",
+    "complete event chronology and exact dates",
+    "the presence or absence of formal writing, religion or central authority"
   ],
   worldRules: {
     isolatedFromHumanity: true,
@@ -52,9 +56,9 @@ export const N007_MIGRATION_RECORD = Object.freeze({
   ],
   source: {
     type: "reconstructed_from_confirmed_conversation_records",
-    lastConfirmedDate: "2026-11-06",
+    lastConfirmedDate: "2026-11-13",
     confidence: "partial",
-    note: "This record is a migration index, not a complete canonical world snapshot."
+    note: "This record is a partial migration index reconstructed from conversation records, not a complete canonical world snapshot. Unverified details are deliberately left unknown."
   }
 });
 
