@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createMigrationRecord, validateLegacySnapshot } from "../src/index.js";
-import { validateEngineWorld } from "../src/engine-adapter.js";
+import { validateEngineWorld, synchronizeSnapshotMetadata } from "../src/engine-adapter.js";
 import { createSovereignGenesis } from "../../world/index.js";
 
 function engineWorld(overrides = {}) {
@@ -154,4 +154,13 @@ test("accepts the actual engine-generated schema without treating it as N-007 hi
   };
   assert.equal(validateLegacySnapshot(importedShape).ok, true);
   assert.equal(worldState.citizens.length, 100);
+});
+
+
+test("synchronizes snapshot year and living census after a simulation tick", () => {
+  const value = snapshot();
+  const result = { worldYear: 31, livingPopulation: 379 };
+  assert.equal(synchronizeSnapshotMetadata(value, result), value);
+  assert.equal(value.worldYear, 31);
+  assert.equal(value.population.count, 379);
 });
