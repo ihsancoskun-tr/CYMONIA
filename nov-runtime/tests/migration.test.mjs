@@ -53,7 +53,7 @@ function snapshot(world = engineWorld()) {
     schemaVersion: 1,
     simulationId: "N-007",
     worldYear: 30,
-    population: { count: world.citizens.length },
+    population: { count: world.citizens.filter(citizen => citizen.alive).length },
     worldState: world
   };
 }
@@ -93,19 +93,31 @@ test("requires a complete engine world and individual citizen records", () => {
 
 test("accepts a structurally complete N-007 engine snapshot", () => {
   assert.deepEqual(validateLegacySnapshot(snapshot()), {
-    ok: true, population: 1, worldMinute: 29 * 525600
+    ok: true, population: 1, totalCitizenRecords: 1, worldMinute: 29 * 525600
   });
 });
 
 test("rejects population mismatch and duplicate citizen identifiers", () => {
   const mismatch = snapshot();
   mismatch.population.count = 2;
-  assert.equal(validateLegacySnapshot(mismatch).reason, "population_count_must_match_engine_citizens");
+  assert.equal(validateLegacySnapshot(mismatch).reason, "population_count_must_match_living_citizens");
 
   const duplicateWorld = engineWorld();
   duplicateWorld.citizens.push(structuredClone(duplicateWorld.citizens[0]));
   const duplicate = snapshot(duplicateWorld);
   assert.equal(validateLegacySnapshot(duplicate).reason, "duplicate_citizen_id");
+});
+
+test("keeps deceased citizens in history without counting them as living population", () => {
+  const world = engineWorld();
+  const deceased = structuredClone(world.citizens[0]);
+  deceased.id = "n-002";
+  deceased.alive = false;
+  world.citizens.push(deceased);
+  const migrated = snapshot(world);
+  assert.equal(validateLegacySnapshot(migrated).ok, true);
+  assert.equal(validateLegacySnapshot(migrated).population, 1);
+  assert.equal(validateLegacySnapshot(migrated).totalCitizenRecords, 2);
 });
 
 test("rejects citizen records that do not contain engine state", () => {
