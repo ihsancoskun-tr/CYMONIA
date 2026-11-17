@@ -22,6 +22,8 @@ jobs:
           node-version: "22"
       - name: Test N-007 migration contract
         run: node --test nov-runtime/tests/*.test.mjs
+      - name: Validate Cloudflare Worker bundle without deploying
+        run: npx --yes wrangler@4 deploy --config wrangler.nov.toml --dry-run
 
   deploy:
     needs: test
