@@ -83,6 +83,9 @@ test("rejects snapshots that would reset or misidentify N-007", () => {
   }).reason, "simulation_id_mismatch");
   const tooYoung = snapshot(engineWorld({ clock: { realEpochMs: 1, worldMinute: 28 * 525600 } }));
   assert.equal(validateLegacySnapshot(tooYoung).reason, "snapshot_does_not_reach_n007_year_30");
+  const wrongYear = snapshot();
+  wrongYear.worldYear = 31;
+  assert.equal(validateLegacySnapshot(wrongYear).reason, "snapshot_year_does_not_match_engine_clock");
 });
 
 test("requires a complete engine world and individual citizen records", () => {
@@ -118,6 +121,16 @@ test("keeps deceased citizens in history without counting them as living populat
   assert.equal(validateLegacySnapshot(migrated).ok, true);
   assert.equal(validateLegacySnapshot(migrated).population, 1);
   assert.equal(validateLegacySnapshot(migrated).totalCitizenRecords, 2);
+});
+
+test("rejects a corrupted causal ledger", () => {
+  const corrupted = snapshot();
+  corrupted.worldState.ledger.push({
+    id: "broken", seq: 0, worldMinute: 0, type: "BROKEN", actorId: "world",
+    payload: {}, causes: [], previousHash: "GENESIS", hash: "00000000"
+  });
+  corrupted.worldState.ledgerHead = "00000000";
+  assert.equal(validateLegacySnapshot(corrupted).reason, "canonical_ledger_integrity_failed");
 });
 
 test("rejects citizen records that do not contain engine state", () => {
