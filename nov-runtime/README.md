@@ -8,6 +8,8 @@ This Worker is isolated from CYMONIA's production world. It imports the existing
 - Exposes read-only `/health`, `/state` and `/history` endpoints.
 - Stores imported snapshots as versioned chunks so a single Durable Object value does not need to contain the whole world.
 - Advances the imported world through the existing `advanceWorldTo` engine function, one bounded alarm cycle at a time.
+- Reconciles the saved year and living-population count after every tick, so a year boundary, birth or death does not invalidate the next alarm.
+- Verifies the imported causal ledger before accepting the snapshot.
 - Provides authenticated `POST /admin/import`, `POST /admin/start` and `POST /admin/pause` endpoints.
 - Does not generate Genesis, invent citizens, or start automatically after import.
 
@@ -16,6 +18,10 @@ This Worker is isolated from CYMONIA's production world. It imports the existing
 The earlier `nov_claude_v0.1.zip` prototype was a separate five-year experiment with 24 founders. It is not the canonical N-007 year-30 world. The year-30 record currently available is an aggregate migration index, not a complete citizen-level save.
 
 The importer therefore accepts only a complete version-2 engine snapshot with stable citizen IDs, biological and cognitive state, relationships, knowledge, memories, world objects, resources and canonical ledger. A partial history or the five-year prototype cannot pass this gate. The current migration index must not be mistaken for an importable world snapshot.
+
+## Verify
+
+From the repository root, run `node --test nov-runtime/tests/*.test.mjs` and `npx --yes wrangler@4 deploy --config wrangler.nov.toml --dry-run`. The first command checks migration validation and the Durable Object lifecycle with isolated storage; the second bundles the actual Worker and validates its Wrangler configuration without deploying it.
 
 ## Deploy
 
