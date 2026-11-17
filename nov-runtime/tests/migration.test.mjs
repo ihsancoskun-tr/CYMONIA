@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createMigrationRecord, validateLegacySnapshot } from "../src/index.js";
 import { validateEngineWorld } from "../src/engine-adapter.js";
+import { createSovereignGenesis } from "../../world/index.js";
 
 function engineWorld(overrides = {}) {
   const citizen = {
@@ -137,4 +138,20 @@ test("rejects citizen records that do not contain engine state", () => {
   const invalidWorld = engineWorld();
   invalidWorld.citizens[0].body = null;
   assert.match(validateEngineWorld(invalidWorld).reason, /citizen_engine_state_incomplete/);
+});
+
+
+test("accepts the actual engine-generated schema without treating it as N-007 history", () => {
+  const worldState = createSovereignGenesis({ seed: 7, realEpochMs: 0 });
+  worldState.clock.worldMinute = 29 * 525600;
+  worldState.clock.realEpochMs = Date.now() - worldState.clock.worldMinute * 1000;
+  const importedShape = {
+    schemaVersion: 1,
+    simulationId: "N-007",
+    worldYear: 30,
+    population: { count: worldState.citizens.filter(citizen => citizen.alive).length },
+    worldState
+  };
+  assert.equal(validateLegacySnapshot(importedShape).ok, true);
+  assert.equal(worldState.citizens.length, 100);
 });
