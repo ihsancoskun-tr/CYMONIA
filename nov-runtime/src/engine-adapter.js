@@ -30,8 +30,9 @@ export function validateEngineWorld(world, expectedPopulation = null) {
     if (!Array.isArray(world[key])) return { ok: false, reason: `engine_world_array_missing:${key}` };
   }
   if (!world.citizens.length) return { ok: false, reason: "individual_citizen_records_required" };
-  if (expectedPopulation !== null && world.citizens.length !== expectedPopulation) {
-    return { ok: false, reason: "population_count_must_match_engine_citizens" };
+  const livingPopulation = world.citizens.filter(citizen => citizen?.alive === true).length;
+  if (expectedPopulation !== null && livingPopulation !== expectedPopulation) {
+    return { ok: false, reason: "population_count_must_match_living_citizens" };
   }
 
   const ids = new Set();
@@ -58,7 +59,7 @@ export function validateEngineWorld(world, expectedPopulation = null) {
   if (typeof world.ledgerHead !== "string" || !world.ledgerHead) {
     return { ok: false, reason: "canonical_ledger_head_missing" };
   }
-  return { ok: true, population: world.citizens.length, worldMinute: world.clock.worldMinute };
+  return { ok: true, population: livingPopulation, totalCitizenRecords: world.citizens.length, worldMinute: world.clock.worldMinute };
 }
 
 export function advanceN007World(world, nowMs = Date.now()) {
