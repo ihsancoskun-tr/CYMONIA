@@ -1,4 +1,4 @@
-import { advanceWorldTo, WORLD_MINUTES_PER_YEAR, REAL_MS_PER_WORLD_MINUTE } from "../../world/index.js";
+import { advanceWorldTo, WORLD_MINUTES_PER_YEAR, REAL_MS_PER_WORLD_MINUTE, verifyLedger } from "../../world/index.js";
 
 const WORLD_ARRAYS = [
   "citizens", "objects", "resourceDeposits", "actions", "projects", "designs",
@@ -59,6 +59,7 @@ export function validateEngineWorld(world, expectedPopulation = null) {
   if (typeof world.ledgerHead !== "string" || !world.ledgerHead) {
     return { ok: false, reason: "canonical_ledger_head_missing" };
   }
+  if (!verifyLedger(world)) return { ok: false, reason: "canonical_ledger_integrity_failed" };
   return { ok: true, population: livingPopulation, totalCitizenRecords: world.citizens.length, worldMinute: world.clock.worldMinute };
 }
 
