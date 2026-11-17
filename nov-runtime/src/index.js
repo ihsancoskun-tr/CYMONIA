@@ -1,4 +1,4 @@
-import { advanceN007World, validateEngineWorld } from "./engine-adapter.js";
+import { advanceN007World, validateEngineWorld, synchronizeSnapshotMetadata } from "./engine-adapter.js";
 
 const RECORD_KEY = "nov:n007:migration-record:v1";
 const SNAPSHOT_MANIFEST_KEY = "nov:n007:snapshot:manifest:v1";
@@ -260,6 +260,7 @@ export class NovWorld {
       const validation = validateLegacySnapshot(snapshot);
       if (!validation.ok) throw new Error(validation.reason);
       const result = advanceN007World(snapshot.worldState, Date.now());
+      synchronizeSnapshotMetadata(snapshot, result);
       await this.storeSnapshot(snapshot);
       record.worldYear = result.worldYear;
       record.population = { estimate: result.livingPopulation, uncertainty: 0 };
