@@ -72,7 +72,9 @@ export function validateLegacySnapshot(snapshot) {
   }
   const engine = validateEngineWorld(snapshot.worldState, snapshot.population.count);
   if (!engine.ok) return engine;
-  return { ok: true, population: engine.population, worldMinute: engine.worldMinute };
+  const engineYear = Math.floor(engine.worldMinute / 525600) + 1;
+  if (snapshot.worldYear !== engineYear) return { ok: false, reason: "snapshot_year_does_not_match_engine_clock" };
+  return { ok: true, population: engine.population, totalCitizenRecords: engine.totalCitizenRecords, worldMinute: engine.worldMinute };
 }
 
 function json(data, status = 200) {
@@ -192,10 +194,14 @@ export class NovWorld {
       if (denied) return denied;
       if (record.status === "running") return json({ ok: false, error: "pause_before_import" }, 409);
 
-      const length = Number(request.headers.get("content-length") || 0);
-      if (length > 25 * 1024 * 1024) return json({ ok: false, error: "snapshot_too_large" }, 413);
+      let rawSnapshot;
+      try { rawSnapshot = await request.text(); }
+      catch { return json({ ok: false, error: "invalid_body" }, 400); }
+      if (new TextEncoder().encode(rawSnapshot).byteLength > 25 * 1024 * 1024) {
+        return json({ ok: false, error: "snapshot_too_large" }, 413);
+      }
       let snapshot;
-      try { snapshot = await request.json(); }
+      try { snapshot = JSON.parse(rawSnapshot); }
       catch { return json({ ok: false, error: "invalid_json" }, 400); }
 
       const validation = validateLegacySnapshot(snapshot);
@@ -214,7 +220,7 @@ export class NovWorld {
       const denied = await this.requireAdmin(request);
       if (denied) return denied;
       if (record.status === "running") return json({ ok: true, status: "running", simulationAdvancing: true });
-      if (record.status !== "snapshot_imported_paused") {
+      if (!["snapshot_imported_paused", "paused_by_operator", "paused_runtime_error"].includes(record.status)) {
         return json({ ok: false, error: "validated_snapshot_required_before_start" }, 409);
       }
       const snapshot = await this.loadSnapshot();
