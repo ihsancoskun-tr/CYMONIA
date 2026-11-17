@@ -63,6 +63,12 @@ export function validateEngineWorld(world, expectedPopulation = null) {
   return { ok: true, population: livingPopulation, totalCitizenRecords: world.citizens.length, worldMinute: world.clock.worldMinute };
 }
 
+export function synchronizeSnapshotMetadata(snapshot, result) {
+  snapshot.worldYear = result.worldYear;
+  snapshot.population.count = result.livingPopulation;
+  return snapshot;
+}
+
 export function advanceN007World(world, nowMs = Date.now()) {
   const validation = validateEngineWorld(world);
   if (!validation.ok) throw new Error(validation.reason);
