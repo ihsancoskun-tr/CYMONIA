@@ -46,14 +46,6 @@ export const N007_MIGRATION_RECORD = Object.freeze({
     observerIntervention: false,
     preserveExistingHistory: true
   },
-  unknownsThatMustNotBeInvented: [
-    "individual citizen identities and personal histories",
-    "exact population count and individual ages",
-    "exact locations and membership of the six local clusters",
-    "kinship and relationship graph",
-    "individual memories, beliefs, knowledge and language lexicons",
-    "complete event chronology and environmental/resource map"
-  ],
   source: {
     type: "reconstructed_from_confirmed_conversation_records",
     lastConfirmedDate: "2026-11-13",
@@ -235,7 +227,7 @@ export class NovWorld {
       record.startedAt = new Date().toISOString();
       record.source = { ...record.source, clockAnchoredAt: record.startedAt };
       await this.ctx.storage.put(RECORD_KEY, record);
-      await this.ctx.storage.setAlarm(Date.now() + (result.catchingUp ? 1_000 : ALARM_INTERVAL_MS));
+      await this.ctx.storage.setAlarm(Date.now() + ALARM_INTERVAL_MS);
       return json({ ok: true, status: "running", worldMinute: validation.worldMinute, simulationAdvancing: true });
     }
 
@@ -268,7 +260,7 @@ export class NovWorld {
       record.lastTickAt = new Date().toISOString();
       record.lastWorldMinute = result.worldMinute;
       await this.ctx.storage.put(RECORD_KEY, record);
-      await this.ctx.storage.setAlarm(Date.now() + ALARM_INTERVAL_MS);
+      await this.ctx.storage.setAlarm(Date.now() + (result.catchingUp ? 1_000 : ALARM_INTERVAL_MS));
     } catch (error) {
       record.status = "paused_runtime_error";
       record.runtimeError = String(error?.message || error).slice(0, 240);
