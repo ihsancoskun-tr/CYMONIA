@@ -4,7 +4,7 @@ pages_build_output_dir = "site"
 
 [[services]]
 binding = "WORLD_SERVICE"
-service = "cymonia-sovereign-world"
+service = "cymonia"
 
 [[d1_databases]]
 binding = "CYMONIA_DB"
