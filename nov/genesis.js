@@ -24,6 +24,20 @@ export function createNovGenesis({seed=20261119,realEpochMs=Date.now()}={}){
   world.experiments=[];
   world.reserves={observerEmbodimentKg:0,observerEmbodimentEnergyUnits:0};
 
+  // Give every replicate globally distinguishable inhabitant IDs.
+  const remappedIds=new Map();
+  world.citizens.forEach((citizen,index)=>{
+    const previous=citizen.id;
+    const next=`nov:${seed}:citizen:${String(index+1).padStart(3,'0')}`;
+    remappedIds.set(previous,next);
+    citizen.id=next;
+    citizen.knownEntityIds=(citizen.knownEntityIds||[]).map(id=>remappedIds.get(id)||id);
+  });
+  for(const citizen of world.citizens){
+    citizen.knownEntityIds=citizen.knownEntityIds.map(id=>remappedIds.get(id)||id);
+  }
+  world.cognitionQueue=(world.cognitionQueue||[]).map(entry=>({...entry,citizenId:remappedIds.get(entry.citizenId)||entry.citizenId}));
+
   // Natural deposits only. No one owns or initially knows these locations.
   world.resourceDeposits=[
     {id:'nov:water:north',type:'water',quantity:1_200_000,renewPerDay:14_000,position:{x:48,y:17},accessDifficulty:.08},
