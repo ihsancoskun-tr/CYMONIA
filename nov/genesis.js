@@ -65,6 +65,7 @@ export function createNovGenesis({seed=20261119,realEpochMs=Date.now()}={}){
   // Replace the base-world genesis event so its starter-endowment history cannot leak in.
   world.ledger=[];
   world.ledgerHead='NOV_GENESIS';
+  world.worldId=world.nov.runId;
   appendEvent(world,'NOV_WORLD_GENESIS','world',{
     seed,
     population:world.citizens.length,
@@ -76,7 +77,6 @@ export function createNovGenesis({seed=20261119,realEpochMs=Date.now()}={}){
     previousRunStateImported:false
   },[],0);
 
-  world.worldId=world.nov.runId;
   world.clock.worldMinute=0;
   return world;
 }
