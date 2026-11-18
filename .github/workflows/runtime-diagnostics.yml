@@ -19,7 +19,7 @@ jobs:
       - name: Read bounded runtime diagnostics with sanitized output
         run: |
           TAIL_STATUS=0
-          timeout 110s npx wrangler tail cymonia-sovereign-world --config wrangler.world.toml --format json >/tmp/runtime-tail.json 2>/tmp/runtime-tail-errors.log || TAIL_STATUS=$?
+          timeout 110s npx wrangler tail cymonia --config wrangler.world.toml --format json >/tmp/runtime-tail.json 2>/tmp/runtime-tail-errors.log || TAIL_STATUS=$?
           test "$TAIL_STATUS" -eq 0 -o "$TAIL_STATUS" -eq 124
           python3 <<'PY'
           import json
