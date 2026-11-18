@@ -1,6 +1,7 @@
 name: NOV Runtime
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - nov/persistent-runtime-2026-11-16
