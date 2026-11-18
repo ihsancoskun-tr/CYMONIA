@@ -75,12 +75,17 @@ jobs:
         run: npx wrangler deploy --config wrangler.world.toml
       - name: Wake canonical heartbeat after deploy
         run: |
+          rm -f /tmp/cymonia-post-worker-health.json /tmp/cymonia-heartbeat.json
+          # Wake the Durable Object through the Worker that was just deployed.
+          # Pages is deployed in the following job and must not be a prerequisite
+          # for bringing the canonical runtime online.
           for i in $(seq 1 20); do
-            curl --max-time 60 -fsS https://cymonia.pages.dev/api/v2/health -o /tmp/cymonia-post-worker-health.json 2>/dev/null || true
-            node -e "const fs=require('fs');try{const h=JSON.parse(fs.readFileSync('/tmp/cymonia-post-worker-health.json'));process.exit(h.ok&&h.service==='cymonia-sovereign-world'&&Number.isFinite(h.world_minute)?0:1)}catch{process.exit(1)}" && break
+            curl --max-time 60 -fsS https://cymonia.ihsancoskun.workers.dev/runtime-heartbeat -o /tmp/cymonia-heartbeat.json 2>/dev/null || true
+            node -e "const fs=require('fs');try{const h=JSON.parse(fs.readFileSync('/tmp/cymonia-heartbeat.json'));process.exit(h.ok&&h.service==='cymonia-sovereign-world'&&Number.isFinite(h.world_minute)?0:1)}catch{process.exit(1)}" && break
             sleep 2
           done
-          node -e "const fs=require('fs');const h=JSON.parse(fs.readFileSync('/tmp/cymonia-post-worker-health.json'));if(!h.ok)process.exit(1);console.log({world_minute:h.world_minute,heartbeat:h.heartbeat,lag_world_minutes:h.lag_world_minutes})"
+          curl --max-time 60 -fsS https://cymonia.ihsancoskun.workers.dev/health -o /tmp/cymonia-post-worker-health.json
+          node -e "const fs=require('fs');const h=JSON.parse(fs.readFileSync('/tmp/cymonia-post-worker-health.json'));if(!h.ok||h.service!=='cymonia-sovereign-world'||!Number.isFinite(h.world_minute))process.exit(1);console.log({world_minute:h.world_minute,heartbeat:h.heartbeat,lag_world_minutes:h.lag_world_minutes})"
 
   deploy-pages:
     name: Deploy Observer Pages
