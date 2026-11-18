@@ -1,0 +1,42 @@
+name: Deploy Independent NOV World
+
+on:
+  push:
+    branches:
+      - nov-independent-world
+    paths:
+      - 'nov/**'
+      - 'world/**'
+      - 'worker/**'
+      - 'wrangler.nov.toml'
+      - '.github/workflows/deploy-nov.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nov-independent-world
+  cancel-in-progress: false
+
+jobs:
+  deploy-nov:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: nov-independent-world
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate deployment credentials
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+      - name: Install Wrangler
+        run: npm install --no-save wrangler@4
+      - name: Deploy isolated NOV Worker and Durable Object
+        run: npx wrangler deploy --config wrangler.nov.toml
