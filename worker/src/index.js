@@ -1,4 +1,5 @@
 import {applySystemRepair,applyHumanSystemRepair} from '../../world/system-repair.js';
+import {createNovGenesis} from '../../nov/genesis.js';
 import {
   createSovereignGenesis,
   advanceWorldTo,
@@ -241,15 +242,15 @@ export class SovereignWorld {
         ...(this.evidencePool?.stats()||{}),
       }));
       if(!this.world){
-        this.world=createSovereignGenesis({realEpochMs:Date.now()});
+        this.world=this.env.NOV_MODE==='true'?createNovGenesis({realEpochMs:Date.now()}):createSovereignGenesis({realEpochMs:Date.now()});
         this.registerCitizenEvidence();
         ensureRuntime(this.world);
         await this.persist({forceSeal:true});
       }else{
         ensureRuntime(this.world);
         this.establishClockGuardBaseline();
-        const populationRepaired=applySystemRepair(this.world,this.env.SYSTEM_REPAIR_ID);
-        const humansRepaired=applyHumanSystemRepair(this.world,this.env.HUMAN_SYSTEM_REPAIR_ID);
+        const populationRepaired=this.env.NOV_MODE==='true'?false:applySystemRepair(this.world,this.env.SYSTEM_REPAIR_ID);
+        const humansRepaired=this.env.NOV_MODE==='true'?false:applyHumanSystemRepair(this.world,this.env.HUMAN_SYSTEM_REPAIR_ID);
         const repaired=populationRepaired||humansRepaired;
         if(repaired)this.registerCitizenEvidence();
         if(repaired||!this.lastPersistedGeneration||this.knowledgeArchive?.backingBytes)await this.persist({forceSeal:true});
@@ -1284,7 +1285,7 @@ export class SovereignWorld {
     if(request.method==='GET'&&path==='/runtime-heartbeat'&&(this.initializing||!this.world)&&
       request.headers.get('x-cymonia-await-ready')!=='1'){
       this.lastSchedulerHeartbeatRealMs=Date.now();
-      return json({ok:true,service:'cymonia-sovereign-world',initializing:true,world_minute:null,lag_world_minutes:null});
+      return json({ok:true,service:this.env.NOV_MODE==='true'?'nov-independent-world':'cymonia-sovereign-world',initializing:true,world_minute:null,lag_world_minutes:null});
     }
     await this.ready;
     if(!this.world)await this.restoreCommittedWorld(this.pendingRecoveryNeuronBudget);
@@ -1436,6 +1437,7 @@ export class SovereignWorld {
       return why?json({ok:true,why}):json({ok:false,error:'event_not_found'},404);
     }
     if(request.method==='POST'&&path==='/avatar'){
+      if(this.env.NOV_MODE==='true')return json({ok:false,error:'observer_embodiment_disabled_for_nov'},403);
       const body=await request.json();
       if(!body?.actor?.id)return json({ok:false,error:'actor_required'},400);
       return this.mutateWorld(async()=>{
@@ -1450,6 +1452,7 @@ export class SovereignWorld {
       }).catch(()=>json({ok:false,error:'world_write_unavailable'},503));
     }
     if(request.method==='POST'&&path==='/intent'){
+      if(this.env.NOV_MODE==='true')return json({ok:false,error:'external_direction_disabled_for_nov'},403);
       const body=await request.json();
       if(!body?.citizenId||!String(body.intent||'').trim())return json({ok:false,error:'intent_required'},400);
       return this.mutateWorld(async()=>{
@@ -1481,7 +1484,7 @@ export default {
             const response=await stub.fetch(new Request('https://cymonia.internal/world/runtime-heartbeat',{signal,headers}));
             if(!response.ok){await response.body?.cancel();throw new Error(`heartbeat_http_${response.status}`);}
             const health=await response.json();
-            if(!health.ok||health.service!=='cymonia-sovereign-world')throw new Error('heartbeat_response_invalid');
+            if(!health.ok||health.service!==(env.NOV_MODE==='true'?'nov-independent-world':'cymonia-sovereign-world'))throw new Error('heartbeat_response_invalid');
             if(typeof health.cpu_renewal_token==='string'&&delay>=lastTokenSlot){cpuRenewalToken=health.cpu_renewal_token;lastTokenSlot=delay;}
             return health;
           };
