@@ -18,6 +18,11 @@ export function startAction(world,citizen,spec,at=world.clock.worldMinute){
   if(spec.type==='MOVE'&&targetPosition){
     targetPosition=resolveAccessibleTarget(world,citizen,targetPosition,spec.targetId||null);
     physics=travelProfile(world,citizen,targetPosition,{targetId:spec.targetId||null});
+    if(world.nov?.island){
+      const island=world.nov.island;
+      const inside=(point)=>(((point.x-island.centerX)/island.radiusX)**2+((point.y-island.centerY)/island.radiusY)**2)<=1;
+      if(!inside(citizen.position)||!inside(targetPosition)||physics.path?.some(point=>!inside(point)))throw new Error('nov_island_boundary');
+    }
     duration=Math.max(duration,physics.minimumMinutes);
     targetPosition={...physics.targetPosition};
   }else{
