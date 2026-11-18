@@ -1298,7 +1298,7 @@ export class SovereignWorld {
       if(request.headers.get('x-cymonia-cpu-renewal')===this.coldCpuRenewalToken)this.awaitingColdCpuRenewal=false;
       this.lastSchedulerHeartbeatRealMs=Date.now();
       this.startRuntimeLoop();
-      return json({ok:true,service:'cymonia-sovereign-world',world_minute:world.clock.worldMinute,
+      return json({ok:true,service:this.env.NOV_MODE==='true'?'nov-independent-world':'cymonia-sovereign-world',world_minute:world.clock.worldMinute,
         cpu_renewal_token:this.coldCpuRenewalToken,
         cpu_renewal_required:Boolean(this.awaitingColdCpuRenewal),
         lag_world_minutes:Math.max(0,worldMinuteAt(world,Date.now())-world.clock.worldMinute)});
@@ -1309,7 +1309,7 @@ export class SovereignWorld {
       const checkpointRealMs=Number(this.sqlRows('SELECT updated_at FROM world_clock_guard WHERE id=1 LIMIT 1')[0]?.updated_at??runtime.lastTickRealMs??0);
       return json({
         ok:true,
-        service:'cymonia-sovereign-world',
+        service:this.env.NOV_MODE==='true'?'nov-independent-world':'cymonia-sovereign-world',
         version:2,
         model,
         ai:Boolean(this.env.AI?.run),
