@@ -4,11 +4,11 @@
 
 The production topology is:
 
-1. Worker `cymonia-sovereign-world` from `wrangler.world.toml`.
+1. Worker `cymonia` from `wrangler.world.toml`.
 2. Durable Object binding `WORLD`, class `SovereignWorld`, SQLite migration `sovereign-v2-genesis`.
 3. Workers AI binding `AI` with `BRAIN_MODEL=@cf/zai-org/glm-4.7-flash` by default.
 4. Pages project `cymonia` from `wrangler.toml`.
-5. Pages service binding `WORLD_SERVICE` -> `cymonia-sovereign-world`.
+5. Pages service binding `WORLD_SERVICE` -> `cymonia`.
 6. Existing D1 binding `CYMONIA_DB` for identity/session metadata.
 
 ## Deployment order
